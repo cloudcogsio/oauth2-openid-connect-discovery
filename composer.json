@@ -1,0 +1,35 @@
+{
+	"name" : "cloudcogsio/oauth2-openid-connect-discovery",
+	"type" : "library",
+	"license" : "MIT",
+	"authors" : [{
+			"name" : "Ricardo Assing",
+			"email" : "ricardo@tsiana.ca",
+			"role" : "Developer"
+		}
+	],
+	"keywords" : [
+		"cloudcogs",
+		"cloudcogs.io",
+		"oauth2",
+		"openid",
+		"openid connect discovery",
+		"idp",
+		"identity",
+		"sso",
+		"single sign on"
+	],
+	"description" : "This library extends the 'League OAuth2 Client' library to provide OpenID Connect Discovery support for supporting providers that expose a .well-known configuration endpoint.",
+	"minimum-stability" : "dev",
+	"autoload" : {
+		"psr-4" : {
+			"Cloudcogs\\OAuth2\\Client\\" : "src/"
+		}
+	},
+	"require" : {
+		"league/oauth2-client" : "~2.6.0",
+		"firebase/php-jwt" : "~5.4.0",
+		"laminas/laminas-cache-storage-adapter-filesystem" : "~1.1.1",
+		"laminas/laminas-cache" : "~3.0.x-dev"
+	}
+}
