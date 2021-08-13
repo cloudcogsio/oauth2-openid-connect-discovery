@@ -93,7 +93,8 @@ abstract class AbstractOIDCProvider extends AbstractProvider
      * 
      * @param string $token
      * @throws TokenIntrospectionException
-     * @return object|mixed
+     * 
+     * @return \Cloudcogs\OAuth2\Client\OpenIDConnect\ParsedToken
      */
     public function introspectToken($token)
     {
@@ -105,7 +106,7 @@ abstract class AbstractOIDCProvider extends AbstractProvider
         
         // Decode locally using cached JWK
         try {
-            return JWT::decode($token, JWK::parseKeySet($this->OIDCDiscovery->getPublicKey()), $resolved_algs);
+            return new ParsedToken(json_encode(JWT::decode($token, JWK::parseKeySet($this->OIDCDiscovery->getPublicKey()), $resolved_algs)));
         } catch (\Exception $e) 
         {
             
@@ -127,7 +128,7 @@ abstract class AbstractOIDCProvider extends AbstractProvider
                     
                     if ($HttpResponse->getStatusCode() == "200")
                     {
-                       return (object) json_decode((string) $HttpResponse->getBody());
+                       return new ParsedToken((string) $HttpResponse->getBody());
                     }
                     else
                     {
