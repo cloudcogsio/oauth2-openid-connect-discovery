@@ -37,9 +37,14 @@ abstract class AbstractOIDCProvider extends AbstractProvider
         $cache_provider = $options[self::OPTION_PUBLICKEY_CACHE_PROVIDER];
         if (empty($cache_provider))
         {
+            $default_dir = getcwd()."/data/oidc-discovery-cache";
+            if (!is_dir($default_dir))
+            {
+                mkdir($default_dir,0777,true);
+            }
             $cache_provider = new \Laminas\Cache\Storage\Adapter\Filesystem();
             $cache_provider->setOptions([
-                'cache_dir' => dirname(__DIR__).'/../data',
+                'cache_dir' => $default_dir,
                 'suffix' => $this->clientId
             ]);
         }

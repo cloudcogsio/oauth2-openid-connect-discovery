@@ -84,13 +84,13 @@ class ParsedToken
      *
      * Use of this claim is OPTIONAL.
      *
-     * Takes an optional format string which will return the formatted nbf value using date($date_format,nbf);
+     * Takes an optional format string which will return the formatted exp value using date($date_format,exp);
      *
      * @return int | null
      */
     public function getExpirationTime(string $date_format = null)
     {
-        if ($date_format && $this->exp) return date($date_format, $this->exp);
+        if ($date_format && $this->exp) return date($date_format, intval($this->exp));
         
         return $this->exp;
     }
@@ -113,7 +113,7 @@ class ParsedToken
      */
     public function getNotBefore(string $date_format = null)
     {
-        if ($date_format && $this->nbf) return date($date_format, $this->nbf);
+        if ($date_format && $this->nbf) return date($date_format, intval($this->nbf));
         
         return $this->nbf;
     }
@@ -133,7 +133,7 @@ class ParsedToken
      */
     public function getIssuedAt(string $date_format = null)
     {
-        if ($date_format && $this->iat) return date($date_format, $this->iat);
+        if ($date_format && $this->iat) return date($date_format, intval($this->iat));
         
         return $this->iat;
     }
@@ -160,7 +160,7 @@ class ParsedToken
     
     /**
      * Determine if the token has expired
-     * 
+     *
      * @return boolean
      */
     public function isExpired()
@@ -170,7 +170,7 @@ class ParsedToken
     
     /**
      * Determine if the token is valid based on the "Not Before" and "Expiration Time" claims
-     * 
+     *
      * @return boolean
      */
     public function isValid()
@@ -182,7 +182,7 @@ class ParsedToken
     
     /**
      * Return an array of available claims for the token
-     * 
+     *
      * @return array
      */
     public function getAvailableClaims()
@@ -192,7 +192,7 @@ class ParsedToken
     
     /**
      * Return the token data as an array
-     * 
+     *
      * @return array
      */
     public function toArray()
