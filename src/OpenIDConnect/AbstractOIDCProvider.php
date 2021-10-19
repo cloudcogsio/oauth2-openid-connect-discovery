@@ -101,7 +101,7 @@ abstract class AbstractOIDCProvider extends AbstractProvider
      * 
      * @return \Cloudcogs\OAuth2\Client\OpenIDConnect\ParsedToken
      */
-    public function introspectToken($token)
+    public function introspectToken($token, array $queryParams = [], bool $decode_locally = true)
     {
         $jwt_allowed_algs = [
             'ES384','ES256', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512'
@@ -109,37 +109,57 @@ abstract class AbstractOIDCProvider extends AbstractProvider
         
         $resolved_algs = array_intersect($this->OIDCDiscovery->getUserInfoSigningAlgValuesSupported(), $jwt_allowed_algs);
         
-        // Decode locally using cached JWK
-        try {
-            return new ParsedToken(json_encode(JWT::decode($token, JWK::parseKeySet($this->OIDCDiscovery->getPublicKey()), $resolved_algs)));
-        } catch (\Exception $e) 
+        if ($decode_locally)
         {
-            
+            // Decode locally using cached JWK
+            try {
+                return new ParsedToken(json_encode(JWT::decode($token, JWK::parseKeySet($this->OIDCDiscovery->getPublicKey()), $resolved_algs)));
+            } catch (\Exception $e)
+            {
+                throw new TokenIntrospectionException($e->getMessage(), null, $e);
+            }
+        }
+        else {
             // Try the provider token introspection endpoint
             try {
-                
+               
                 $introspectionEndpoint = $this->OIDCDiscovery->getIntrospectionEndpoint();
                 
                 if(!is_null($introspectionEndpoint))
                 {
-                    $requestBody = "client_id=".$this->clientId."&client_secret=".$this->clientSecret."&token=".$token;
-                    $HttpRequest = $this->getRequestFactory()->getRequest(AbstractProvider::METHOD_POST, $introspectionEndpoint, 
+                    $query_params = [
+                        "client_id" => $this->clientId,
+                        "client_secret" => $this->clientSecret,
+                        "token" => $token
+                    ];
+                    
+                    if (!empty($queryParams))
+                    {
+                        $query_params = array_merge($query_params, $queryParams);
+                    }
+                    
+                    $http_query_string = http_build_query($query_params);
+                    
+                    $HttpRequest = $this->getRequestFactory()->getRequest(AbstractProvider::METHOD_POST, $introspectionEndpoint,
                         [
                             'Content-Type'=>'application/x-www-form-urlencoded',
                             'Accept'=>'application/json'
-                        ],$requestBody);
+                        ], $http_query_string);
                     
                     $HttpResponse = $this->getResponse($HttpRequest);
                     
                     if ($HttpResponse->getStatusCode() == "200")
                     {
-                       return new ParsedToken((string) $HttpResponse->getBody());
+                        return new ParsedToken((string) $HttpResponse->getBody());
                     }
                     else
                     {
                         throw new TokenIntrospectionException($HttpResponse->getReasonPhrase(), $HttpResponse->getStatusCode());
                     }
                     
+                } 
+                else {
+                    throw new TokenIntrospectionException("Invalid Token Introspection Endpoint");
                 }
             } catch (\Exception $e)
             {
