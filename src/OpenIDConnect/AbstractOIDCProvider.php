@@ -54,9 +54,9 @@ abstract class AbstractOIDCProvider extends AbstractProvider
     }
     
     /**
-     * Proxy to \League\OAuth2\Client\Provider\OpenIDConnect\Discovery
+     * Proxy to \Cloudcogs\OAuth2\Client\OpenIDConnect\Discovery
      * 
-     * @return \League\OAuth2\Client\Provider\OpenIDConnect\Discovery
+     * @return Discovery
      */
     public function Discovery()
     {
@@ -116,6 +116,13 @@ abstract class AbstractOIDCProvider extends AbstractProvider
                 return new ParsedToken(json_encode(JWT::decode($token, JWK::parseKeySet($this->OIDCDiscovery->getPublicKey()), $resolved_algs)));
             } catch (\Exception $e)
             {
+                // Cache is invalid, clear and then use remote
+                if ($e instanceof \UnexpectedValueException)
+                {
+                    $this->Discovery()->clearPublicKeyCache();
+                    return $this->introspectToken($token, $queryParams, false);
+                }
+
                 throw new TokenIntrospectionException($e->getMessage(), null, $e);
             }
         }
@@ -181,7 +188,7 @@ abstract class AbstractOIDCProvider extends AbstractProvider
      *
      * @param  array $options
      * @return void
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
     private function assertRequiredOptions(array $options)
     {

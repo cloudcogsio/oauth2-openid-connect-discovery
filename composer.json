@@ -30,6 +30,12 @@
 		"league/oauth2-client" : "~2.6.0",
 		"firebase/php-jwt" : "~5.4.0",
 		"laminas/laminas-cache-storage-adapter-filesystem" : "~1.1.1",
-		"laminas/laminas-cache" : "~3.0.x-dev"
+		"laminas/laminas-cache" : "~3.0.x-dev",
+        "ext-json": "*"
+    },
+	"config": {
+		"platform": {
+			"php": "7.4"
+		}
 	}
 }
