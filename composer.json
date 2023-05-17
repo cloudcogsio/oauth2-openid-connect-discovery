@@ -27,15 +27,16 @@
 		}
 	},
 	"require" : {
-		"league/oauth2-client" : "~2.6.0",
-		"firebase/php-jwt" : "~5.4.0",
-		"laminas/laminas-cache-storage-adapter-filesystem" : "~1.1.1",
-		"laminas/laminas-cache" : "~3.0.x-dev",
+		"php" : "^8.2",
+		"league/oauth2-client" : "^2.7.0",
+		"firebase/php-jwt" : "^v6.5.0",
+		"laminas/laminas-cache-storage-adapter-filesystem" : "^2.3.0",
+		"laminas/laminas-cache" : "^3.10.1",
         "ext-json": "*"
     },
 	"config": {
 		"platform": {
-			"php": "7.4"
+			"php": "8.2"
 		}
 	}
 }

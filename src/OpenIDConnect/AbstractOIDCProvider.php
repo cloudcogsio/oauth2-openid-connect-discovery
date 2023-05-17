@@ -1,6 +1,8 @@
 <?php
 namespace Cloudcogs\OAuth2\Client\OpenIDConnect;
 
+use Cloudcogs\OAuth2\Client\OpenIDConnect\Exception\InvalidUrlException;
+use Cloudcogs\OAuth2\Client\OpenIDConnect\Exception\WellKnownEndpointException;
 use League\OAuth2\Client\Provider\AbstractProvider;
 use League\OAuth2\Client\Token\AccessTokenInterface;
 use Firebase\JWT\JWT;
@@ -12,20 +14,22 @@ abstract class AbstractOIDCProvider extends AbstractProvider
     const OPTION_WELL_KNOWN_URL = 'well_known_endpoint';
     const OPTION_PUBLICKEY_CACHE_PROVIDER = 'publickey_cache_provider';
 
-    protected $OIDCDiscovery;
-    
+    protected Discovery $OIDCDiscovery;
+
     /**
      * Compatible with league\oauth2-client 2.x
-     * 
+     *
      * Clients written for Identity Providers that support OpenID Connect Discovery can extend this class instead of 'League\OAuth2\Client\Provider\AbstractProvider'
-     * 
+     *
      * Required options are:
      *   'well_known_endpoint' - The URI of the provider's .well-known/openid-configuration service
      *   'publickey_cache_provider' - A laminas cache storage adapter Laminas\Cache\Storage\Adapter\*
      *                              - Alternatively, this key can be passed as an empty string to use the default Laminas\Cache\Storage\Adapter\Filesystem adapter
-     *   
+     *
      * @param array $options
      * @param array $collaborators
+     * @throws InvalidUrlException
+     * @throws WellKnownEndpointException
      */
     public function __construct(array $options, array $collaborators = [])
     {
@@ -33,7 +37,7 @@ abstract class AbstractOIDCProvider extends AbstractProvider
         
         parent::__construct($options, $collaborators);
         
-        // Setup the default cache adapter if none was provided
+        // Set up the default cache adapter if none was provided
         $cache_provider = $options[self::OPTION_PUBLICKEY_CACHE_PROVIDER];
         if (empty($cache_provider))
         {
@@ -58,7 +62,7 @@ abstract class AbstractOIDCProvider extends AbstractProvider
      * 
      * @return Discovery
      */
-    public function Discovery()
+    public function Discovery(): Discovery
     {
         return $this->OIDCDiscovery;
     }
@@ -68,7 +72,7 @@ abstract class AbstractOIDCProvider extends AbstractProvider
      * {@inheritDoc}
      * @see \League\OAuth2\Client\Provider\AbstractProvider::getResourceOwnerDetailsUrl()
      */
-    public function getResourceOwnerDetailsUrl(AccessTokenInterface $token)
+    public function getResourceOwnerDetailsUrl(AccessTokenInterface $token): ?string
     {
         return $this->OIDCDiscovery->getUserInfoEndpoint();
     }
@@ -78,7 +82,7 @@ abstract class AbstractOIDCProvider extends AbstractProvider
      * {@inheritDoc}
      * @see \League\OAuth2\Client\Provider\AbstractProvider::getBaseAuthorizationUrl()
      */
-    public function getBaseAuthorizationUrl()
+    public function getBaseAuthorizationUrl(): string
     {
         return $this->OIDCDiscovery->getAuthorizationEndpoint();
     }
@@ -88,20 +92,21 @@ abstract class AbstractOIDCProvider extends AbstractProvider
      * {@inheritDoc}
      * @see \League\OAuth2\Client\Provider\AbstractProvider::getBaseAccessTokenUrl()
      */
-    public function getBaseAccessTokenUrl(array $params)
+    public function getBaseAccessTokenUrl(array $params): string
     {
         return $this->OIDCDiscovery->getTokenEndpoint();
     }
-    
+
     /**
-     * Decode a token (either locally or remotely if introspection endpoint is available) 
-     * 
+     * Decode a token (either locally or remotely if introspection endpoint is available)
+     *
      * @param string $token
+     * @param array $queryParams
+     * @param bool $decode_locally
+     * @return ParsedToken
      * @throws TokenIntrospectionException
-     * 
-     * @return \Cloudcogs\OAuth2\Client\OpenIDConnect\ParsedToken
      */
-    public function introspectToken($token, array $queryParams = [], bool $decode_locally = true)
+    public function introspectToken(string $token, array $queryParams = [], bool $decode_locally = true): ParsedToken
     {
         $jwt_allowed_algs = [
             'ES384','ES256', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512'
@@ -175,7 +180,7 @@ abstract class AbstractOIDCProvider extends AbstractProvider
         }
     }
     
-    protected function getRequiredOptions()
+    protected function getRequiredOptions(): array
     {
         return [
             self::OPTION_WELL_KNOWN_URL,
@@ -190,7 +195,7 @@ abstract class AbstractOIDCProvider extends AbstractProvider
      * @return void
      * @throws \InvalidArgumentException
      */
-    private function assertRequiredOptions(array $options)
+    private function assertRequiredOptions(array $options): void
     {
         $missing = array_diff_key(array_flip($this->getRequiredOptions()), $options);
         

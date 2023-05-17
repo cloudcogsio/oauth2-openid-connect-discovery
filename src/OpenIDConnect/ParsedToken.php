@@ -2,13 +2,13 @@
 namespace Cloudcogs\OAuth2\Client\OpenIDConnect;
 
 /**
- * Implments RFC7519 registered claims as getters
+ * Implements RFC7519 registered claims as getters
  * Other claims can be accessed by overloading.
  * Casting to string will return the token data as a JSON string.
  */
 class ParsedToken
 {
-    protected $data;
+    protected mixed $data;
     
     public function __construct(string $json)
     {
@@ -26,7 +26,7 @@ class ParsedToken
      
      * @return string | null
      */
-    public function getIssuer()
+    public function getIssuer(): ?string
     {
         return $this->iss;
     }
@@ -45,7 +45,7 @@ class ParsedToken
      *
      * @return string | null
      */
-    public function getSubject()
+    public function getSubject(): ?string
     {
         return $this->sub;
     }
@@ -67,7 +67,7 @@ class ParsedToken
      *
      * @return mixed string | array | null
      */
-    public function getAudience()
+    public function getAudience(): mixed
     {
         return $this->aud;
     }
@@ -88,7 +88,7 @@ class ParsedToken
      *
      * @return int | null
      */
-    public function getExpirationTime(string $date_format = null)
+    public function getExpirationTime(string $date_format = null): ?int
     {
         if ($date_format && $this->exp) return date($date_format, intval($this->exp));
         
@@ -111,7 +111,7 @@ class ParsedToken
      *
      * @return int | null
      */
-    public function getNotBefore(string $date_format = null)
+    public function getNotBefore(string $date_format = null): ?int
     {
         if ($date_format && $this->nbf) return date($date_format, intval($this->nbf));
         
@@ -131,7 +131,7 @@ class ParsedToken
      *
      * @return int | null
      */
-    public function getIssuedAt(string $date_format = null)
+    public function getIssuedAt(string $date_format = null): ?int
     {
         if ($date_format && $this->iat) return date($date_format, intval($this->iat));
         
@@ -153,7 +153,7 @@ class ParsedToken
      *
      * @return string | null
      */
-    public function getJwtId()
+    public function getJwtId(): ?string
     {
         return $this->jti;
     }
@@ -163,7 +163,7 @@ class ParsedToken
      *
      * @return boolean
      */
-    public function isExpired()
+    public function isExpired(): bool
     {
         return ($this->getExpirationTime() < time());
     }
@@ -173,7 +173,7 @@ class ParsedToken
      *
      * @return boolean
      */
-    public function isValid()
+    public function isValid(): bool
     {
         if (time() >= $this->getNotBefore() && !$this->isExpired()) return true;
         
@@ -185,7 +185,7 @@ class ParsedToken
      *
      * @return array
      */
-    public function getAvailableClaims()
+    public function getAvailableClaims(): array
     {
         return array_keys((array) $this->data);
     }
@@ -195,7 +195,7 @@ class ParsedToken
      *
      * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {
         return (array) $this->data;
     }

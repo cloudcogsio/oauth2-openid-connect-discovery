@@ -1,6 +1,8 @@
 <?php
 namespace Cloudcogs\OAuth2\Client\OpenIDConnect;
 
+use Laminas\Cache\Exception\ExceptionInterface;
+use Laminas\Cache\Storage\Adapter\AbstractAdapter;
 use \League\OAuth2\Client\Provider\AbstractProvider;
 use Cloudcogs\OAuth2\Client\OpenIDConnect\Exception\InvalidUrlException;
 use Cloudcogs\OAuth2\Client\OpenIDConnect\Exception\WellKnownEndpointException;
@@ -13,31 +15,31 @@ class Discovery
     /** 
      * @var \League\OAuth2\Client\Provider\AbstractProvider
      */
-    protected $Provider;
+    protected AbstractProvider $Provider;
     
     /**
      * A PHP object representation of the well-known configuration
      * 
      * @var object
      */
-    protected $WellKnownConfiguration;
+    protected object $WellKnownConfiguration;
     
     /**
      * Instance of the data cache adapter
      * 
-     * @var \Laminas\Cache\Storage\Adapter\AbstractAdapter
+     * @var AbstractAdapter
      */
-    protected $DataCache;
-    
+    protected AbstractAdapter $DataCache;
+
     /**
      * 
      * @param AbstractProvider $Provider
      * @param string $wellKnownUrl
-     * @param \Laminas\Cache\Storage\Adapter\AbstractAdapter $DataCache
+     * @param AbstractAdapter $DataCache
      * @throws InvalidUrlException
      * @throws WellKnownEndpointException
      */
-    public function __construct(AbstractProvider $Provider, string $wellKnownUrl, \Laminas\Cache\Storage\Adapter\AbstractAdapter $DataCache)
+    public function __construct(AbstractProvider $Provider, string $wellKnownUrl, AbstractAdapter $DataCache)
     {
         $this->Provider = $Provider;
         
@@ -68,9 +70,9 @@ class Discovery
     /**
      * Proxy to composed \Laminas\Cache\Storage\Adapter\AbstractAdapter object.
      * 
-     * @return \Laminas\Cache\Storage\Adapter\AbstractAdapter
+     * @return AbstractAdapter
      */
-    public function DataCache()
+    public function DataCache(): AbstractAdapter
     {
         return $this->DataCache;
     }
@@ -80,19 +82,20 @@ class Discovery
      * 
      * @return object
      */
-    public function getWellKnownConfiguration()
+    public function getWellKnownConfiguration(): object
     {
         return $this->WellKnownConfiguration;
     }
-    
+
     /**
      * Get the public key (either from cache or the server)
-     * 
+     *
      * @param boolean $bypassCache
-     * 
+     *
      * @return array
+     * @throws ExceptionInterface|CertificateEndpointException
      */
-    public function getPublicKey($bypassCache = false)
+    public function getPublicKey(bool $bypassCache = false): array
     {
         if ($bypassCache)
         {
@@ -109,13 +112,14 @@ class Discovery
         
         return $this->fetchPublicKeyFromServer();
     }
-    
+
     /**
      * Clear the cached public keys
-     * 
-     * @return \League\OAuth2\Client\Provider\OpenIDConnect\Discovery
+     *
+     * @return Discovery
+     * @throws ExceptionInterface
      */
-    public function clearPublicKeyCache()
+    public function clearPublicKeyCache(): Discovery
     {
         $this->DataCache->removeItem(self::DATA_CACHE_KEY);
         
@@ -125,10 +129,10 @@ class Discovery
     /**
      * Get the public keys from the server 
      * 
-     * @throws CertificateEndpointException
      * @return array
+     * @throws CertificateEndpointException|ExceptionInterface
      */
-    protected function fetchPublicKeyFromServer()
+    protected function fetchPublicKeyFromServer(): array
     {
         $HttpRequest = $this->Provider->getRequestFactory()->getRequest(AbstractProvider::METHOD_GET, $this->getJwksUri());
         
@@ -160,7 +164,7 @@ class Discovery
      * 
      * @return string
      */
-    public function getIssuer()
+    public function getIssuer(): string
     {
         return $this->issuer;
     }
@@ -170,7 +174,7 @@ class Discovery
      * 
      * @return string
      */
-    public function getAuthorizationEndpoint()
+    public function getAuthorizationEndpoint(): string
     {
         return $this->authorization_endpoint;
     }
@@ -181,7 +185,7 @@ class Discovery
      * 
      * @return string
      */
-    public function getTokenEndpoint()
+    public function getTokenEndpoint(): string
     {
         return $this->token_endpoint;
     }
@@ -192,7 +196,7 @@ class Discovery
      * 
      * @return string | null
      */    
-    public function getUserInfoEndpoint()
+    public function getUserInfoEndpoint(): ?string
     {
         return $this->userinfo_endpoint;
     }
@@ -208,7 +212,7 @@ class Discovery
      * 
      * @return string
      */
-    public function getJwksUri()
+    public function getJwksUri(): string
     {
         return $this->jwks_uri;
     }
@@ -218,7 +222,7 @@ class Discovery
      * 
      * @return string | null
      */
-    public function getRegistrationEndpoint()
+    public function getRegistrationEndpoint(): ?string
     {
         return $this->registration_endpoint;
     }
@@ -228,9 +232,9 @@ class Discovery
      * The server MUST support the openid scope value. 
      * Servers MAY choose not to advertise some supported scope values even when this parameter is used, although those defined in [OpenID.Core] SHOULD be listed, if supported.
      * 
-     * @return string
+     * @return null|string
      */
-    public function getScopesSupported()
+    public function getScopesSupported(): ?string
     {
         return $this->scopes_supported;
     }
@@ -241,7 +245,7 @@ class Discovery
      * 
      * @return string
      */
-    public function getResponseTypesSupported()
+    public function getResponseTypesSupported(): string
     {
         return $this->response_types_supported;
     }    
@@ -252,7 +256,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getResponseModesSupported()
+    public function getResponseModesSupported(): ?array
     {
         return $this->response_modes_supported;
     }
@@ -263,7 +267,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getGrantTypesSupported()
+    public function getGrantTypesSupported(): ?array
     {
         return $this->grant_types_supported;
     }
@@ -273,7 +277,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getArcValuesSupported()
+    public function getArcValuesSupported(): ?array
     {
         return $this->acr_values_supported;
     }
@@ -283,7 +287,7 @@ class Discovery
      * 
      * @return array
      */
-    public function getSubjectTypesSupported()
+    public function getSubjectTypesSupported(): array
     {
         return $this->subject_types_supported;
     }
@@ -295,7 +299,7 @@ class Discovery
      * 
      * @return array
      */
-    public function getIdTokenSigningAlgValuesSupported()
+    public function getIdTokenSigningAlgValuesSupported(): array
     {
         return $this->id_token_signing_alg_values_supported;
     }
@@ -305,7 +309,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getIdTokenEncryptionAlgValuesSupported()
+    public function getIdTokenEncryptionAlgValuesSupported(): ?array
     {
         return $this->id_token_encryption_alg_values_supported;
     }
@@ -315,7 +319,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getIdTokenEncryptionEncValuesSupported()
+    public function getIdTokenEncryptionEncValuesSupported(): ?array
     {
         return $this->id_token_encryption_enc_values_supported;
     }
@@ -325,7 +329,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getUserInfoSigningAlgValuesSupported()
+    public function getUserInfoSigningAlgValuesSupported(): ?array
     {
         return $this->userinfo_signing_alg_values_supported;
     }
@@ -335,7 +339,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getUserInfoEncryptionAlgValuesSupported()
+    public function getUserInfoEncryptionAlgValuesSupported(): ?array
     {
         return $this->userinfo_encryption_alg_values_supported;
     }
@@ -345,7 +349,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getUserInfoEncryptionEncValuesSupported()
+    public function getUserInfoEncryptionEncValuesSupported(): ?array
     {
         return $this->userinfo_encryption_enc_values_supported;
     }
@@ -357,7 +361,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getRequestObjectSigningAlgValuesSupported()
+    public function getRequestObjectSigningAlgValuesSupported(): ?array
     {
         return $this->request_object_signing_alg_values_supported;
     }
@@ -368,7 +372,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getRequestObjectEncryptionAlgValuesSupported()
+    public function getRequestObjectEncryptionAlgValuesSupported(): ?array
     {
         return $this->request_object_encryption_alg_values_supported;
     }
@@ -379,7 +383,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getRequestObjectEncryptionEncValuesSupported()
+    public function getRequestObjectEncryptionEncValuesSupported(): ?array
     {
         return $this->request_object_encryption_enc_values_supported;
     }
@@ -392,7 +396,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getTokenEndpointAuthMethodsSupported()
+    public function getTokenEndpointAuthMethodsSupported(): ?array
     {
         return $this->token_endpoint_auth_methods_supported;
     }
@@ -403,7 +407,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getTokenEndpointAuthSigningAlgValuesSupported()
+    public function getTokenEndpointAuthSigningAlgValuesSupported(): ?array
     {
         return $this->token_endpoint_auth_signing_alg_values_supported;
     }
@@ -414,7 +418,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getDisplayValuesSupported()
+    public function getDisplayValuesSupported(): ?array
     {
         return $this->display_values_supported;
     }
@@ -427,7 +431,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getClaimTypesSupported()
+    public function getClaimTypesSupported(): ?array
     {
         return $this->claim_types_supported;
     }
@@ -438,7 +442,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getClaimsSupported()
+    public function getClaimsSupported(): ?array
     {
         return $this->claims_supported;
     }
@@ -449,7 +453,7 @@ class Discovery
      * 
      * @return string | null
      */
-    public function getServiceDocumentation()
+    public function getServiceDocumentation(): ?string
     {
         return $this->service_documentation;
     }
@@ -460,7 +464,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getClaimsLocalesSupported()
+    public function getClaimsLocalesSupported(): ?array
     {
         return $this->claims_locales_supported;
     }
@@ -470,7 +474,7 @@ class Discovery
      * 
      * @return array | null
      */
-    public function getUiLocalesSupported()
+    public function getUiLocalesSupported(): ?array
     {
         return $this->ui_locales_supported;
     }
@@ -481,7 +485,7 @@ class Discovery
      * 
      * @return boolean | null
      */
-    public function getClaimsParameterSupported()
+    public function getClaimsParameterSupported(): ?bool
     {
         return $this->claims_parameter_supported;
     }
@@ -492,7 +496,7 @@ class Discovery
      * 
      * @return boolean | null
      */
-    public function getRequestParameterSupported()
+    public function getRequestParameterSupported(): ?bool
     {
         return $this->request_parameter_supported;
     }
@@ -503,7 +507,7 @@ class Discovery
      * 
      * @return boolean | null
      */
-    public function getRequestUriParameterSupported()
+    public function getRequestUriParameterSupported(): ?bool
     {
         return $this->request_uri_parameter_supported;
     }
@@ -514,7 +518,7 @@ class Discovery
      * If omitted, the default value is false.
      * @return boolean | null
      */
-    public function getRequestUriRegistration()
+    public function getRequestUriRegistration(): ?bool
     {
         return $this->require_request_uri_registration;
     }
@@ -525,7 +529,7 @@ class Discovery
      * 
      * @return string | null
      */
-    public function getOpPolicyUri()
+    public function getOpPolicyUri(): ?string
     {
         return $this->op_policy_uri;
     }
@@ -536,7 +540,7 @@ class Discovery
      * 
      * @return string | null
      */
-    public function getTosUri()
+    public function getTosUri(): ?string
     {
         return $this->op_tos_uri;
     }
@@ -546,7 +550,7 @@ class Discovery
      * 
      * @return string
      */
-    public function getIntrospectionEndpoint()
+    public function getIntrospectionEndpoint(): string
     {
         return $this->introspection_endpoint;
     }
@@ -560,7 +564,7 @@ class Discovery
      * @param string $property
      * @return mixed 
      */
-    public function __get($property)
+    public function __get(string $property)
     {
         if (property_exists($this->WellKnownConfiguration, $property))
         {
