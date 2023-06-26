@@ -113,6 +113,7 @@ abstract class AbstractOIDCProvider extends AbstractProvider
         {
             // Decode locally using cached JWK
             try {
+                $this->headers = new \stdClass();
                 return new ParsedToken(json_encode(JWT::decode($token, JWK::parseKeySet($this->OIDCDiscovery->getPublicKey()), $this->headers)));
             } catch (\Exception $e)
             {
