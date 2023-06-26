@@ -15,6 +15,7 @@ abstract class AbstractOIDCProvider extends AbstractProvider
     const OPTION_PUBLICKEY_CACHE_PROVIDER = 'publickey_cache_provider';
 
     protected Discovery $OIDCDiscovery;
+    protected \stdClass $headers;
 
     /**
      * Compatible with league\oauth2-client 2.x
@@ -104,21 +105,15 @@ abstract class AbstractOIDCProvider extends AbstractProvider
      * @param array $queryParams
      * @param bool $decode_locally
      * @return ParsedToken
-     * @throws TokenIntrospectionException
+     * @throws TokenIntrospectionException|\Laminas\Cache\Exception\ExceptionInterface
      */
     public function introspectToken(string $token, array $queryParams = [], bool $decode_locally = true): ParsedToken
     {
-        $jwt_allowed_algs = [
-            'ES384','ES256', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512'
-        ];
-        
-        $resolved_algs = array_intersect($this->OIDCDiscovery->getUserInfoSigningAlgValuesSupported(), $jwt_allowed_algs);
-        
         if ($decode_locally)
         {
             // Decode locally using cached JWK
             try {
-                return new ParsedToken(json_encode(JWT::decode($token, JWK::parseKeySet($this->OIDCDiscovery->getPublicKey()), $resolved_algs)));
+                return new ParsedToken(json_encode(JWT::decode($token, JWK::parseKeySet($this->OIDCDiscovery->getPublicKey()), $this->headers)));
             } catch (\Exception $e)
             {
                 // Cache is invalid, clear and then use remote
